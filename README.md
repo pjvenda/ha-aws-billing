@@ -1,0 +1,72 @@
+# Homeassistant AWS billing data collector
+
+## What?
+
+This is a system that I developed with heavy assistance from ChatGPT to pull AWS billing data into homeassistant. I wanted to be able to see through the month how much I am being billed. Since I could not find a direct existing way to do this, I set out to develop my own.
+
+## How?
+
+In broad strokes, the process consists of:
+- AWS produces a daily report using a Data Export into an S3 bucket setup for the purpose
+- A lambda function is used to query those reports and calculate the daily spend, while adding up the value to the monthly total
+- An API gateway function connects to the lambda function to facilitate delivering the information to homeassistant
+- homeassistant is setup with a REST template that pulls and parses the information into template sensors
+- the template sensors can be used to display the data on HA
+
+## The details
+
+### AWS Billing and Cost Management -> Data Export
+
+This is what AWS provides as the means to round up billing data across the entire account.
+
+The Data Export - named `billing-homeassistant-export` in my case - is set to Legacy CUR Export. It should be setup with the following settings:
+
+Data Export Delivery Options
+* Report Data Time Granularity: `daily`
+* Report Versioning: `Create new report version`
+* Compression type: `ZIP`
+
+Data Export Storage Settings
+* S3 Bucket: `billing-homeassistant-temp`
+* S3 Path Prefix: `/reports` (probably not necessary)
+
+When creating the Data Export, an option is provided to create an S3 bucket to store it and suitable permissions will be assigned. My bucket is called `billing-homeassistant-temp`. These permissions are safe and look like this:
+
+```
+(...)
+            "Sid": "EnableAWSDataExportsToWriteToS3AndCheckPolicy",
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "billingreports.amazonaws.com",
+                    "bcm-data-exports.amazonaws.com"
+                ]
+            },
+            "Action": [
+                "s3:PutObject",
+                "s3:GetBucketPolicy"
+            ],
+            "Resource": [
+                "arn:aws:s3:::billing-homeassistant-temp",
+                "arn:aws:s3:::billing-homeassistant-temp/*"
+            ],
+            "Condition": {
+                "StringLike": {
+                    "aws:SourceArn": [
+                        "arn:aws:cur:us-east-1:XXXXXXXXXXXX:definition/*",
+                        "arn:aws:bcm-data-exports:us-east-1:XXXXXXXXXXXX:export/*"
+                    ],
+                    "aws:SourceAccount": "XXXXXXXXXXXX"
+(...)
+```
+I don't think the data export can be forced to run, so I waited until it ran once to look at the report on the S3 bucket.
+
+### AWS Lambda function
+
+[lambda_function.py](/lambda_function.py)
+
+### AWS API Gateway
+
+### Homeassistant REST template
+
+### Homeassistant template sensors
