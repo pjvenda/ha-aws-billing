@@ -21,6 +21,8 @@ If you want to implement this mechanism, please follow the details in the order 
 
 This is what AWS provides as the means to round up billing data across the entire account.
 
+<img alt="Data Export details" src="/img/data_export_details.png" width=600px />
+
 The Data Export - named `billing-homeassistant-export` in my case - is set to Legacy CUR Export. The information generated in this Data Export is a long list of items handled by AWS and the impact that their use had on the billing calculation. It should be setup with the following settings:
 
 Data Export Delivery Options
@@ -31,6 +33,9 @@ Data Export Delivery Options
 Data Export Storage Settings
 * S3 Bucket: `billing-homeassistant-temp`
 * S3 Path Prefix: `/reports` (probably not necessary)
+
+<img alt="Data Export Config 1/2" src="/img/data_export_config_1.png" width=600px />
+<img alt="Data Export Config 2/2" src="/img/data_export_config_2.png" width=600px />
 
 When creating the Data Export, an option is provided to create an S3 bucket to store it and suitable permissions will be assigned. My bucket is called `billing-homeassistant-temp`. These permissions are safe and look like this:
 
@@ -63,12 +68,14 @@ When creating the Data Export, an option is provided to create an S3 bucket to s
 ```
 I don't think the data export can be forced to run, so I waited until it ran once to look at the report on the S3 bucket.
 
+<img alt="Data Export report file sample on S3 bucket" src="/img/data_export_report_file_sample.png" width=600px />
+
 ### AWS Lambda function
 
 To interpret the Data Exports, there is a Lambda function named `billing-homeassistant-cur` of type Python 3.13 that unpacks and parses the content to run the calculations.
 I cannot claim to understand the tables, this was all done by ChatGPT (...a few times until the result was correct). It can be found here [lambda_function.py](/lambda_function.py).
 
-            **NOTICE**: the lambda function was developed to return data via an API gateway, so the output is formatted for that purpose, not necessarily to be consumed directly.
+> **NOTICE**: the lambda function was developed to return data via an API gateway, so the output is formatted for that purpose, not necessarily to be consumed directly.
 
 The function call requires one parameter named `metric` which can be one of several strings:
 - `unblendedcost`
@@ -106,6 +113,8 @@ The Lambda function requires privileges to read from the S3 bucket `billing-home
                 "arn:aws:s3:::billing-homeassistant-temp",
                 "arn:aws:s3:::billing-homeassistant-temp/*"
 ```
+
+<img alt="Lambda Function permissions including custom role" src="/img/lambda-permissions.png" width=600px />
 
 ### AWS API Gateway
 
