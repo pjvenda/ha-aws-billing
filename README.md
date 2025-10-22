@@ -63,10 +63,22 @@ I don't think the data export can be forced to run, so I waited until it ran onc
 
 ### AWS Lambda function
 
-[lambda_function.py](/lambda_function.py)
+To interpret the Data Exports, there is a lambda function that unpacks and parses the content to run the calculations. I cannot claim to understand the tables, this was all done by ChatGPT (...a few times until the result was correct). It can be found here [lambda_function.py](/lambda_function.py).
+
+**NOTICE**: the lambda function was developed to return data via an API gateway, so the output is formatted for that purpose, not necessarily to be consumed directly.
+
+The function call requires one parameter named `metric` which can be one of several strings:
+- `unblendedcost`
+- `UnblendedRateCalc` - the setting that works best for me
+- `pricing/publicOnDemandCost`
+- `AmortizedCost`
+- `BlendedCost`
+I cannot explain the intricacies of AWS billing that tell these options apart. But I know that I use `UnblendedRateCalc` which provides daily and cumulative monthly cost.
 
 ### AWS API Gateway
 
 ### Homeassistant REST template
+
+[rest_aws.yaml](/rest_aws.yaml)
 
 ### Homeassistant template sensors
