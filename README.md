@@ -63,9 +63,10 @@ I don't think the data export can be forced to run, so I waited until it ran onc
 
 ### AWS Lambda function
 
-To interpret the Data Exports, there is a lambda function that unpacks and parses the content to run the calculations. I cannot claim to understand the tables, this was all done by ChatGPT (...a few times until the result was correct). It can be found here [lambda_function.py](/lambda_function.py).
+To interpret the Data Exports, there is a Lambda function named `billing-homeassistant-cur` of type Python 3.13 that unpacks and parses the content to run the calculations.
+I cannot claim to understand the tables, this was all done by ChatGPT (...a few times until the result was correct). It can be found here [lambda_function.py](/lambda_function.py).
 
-**NOTICE**: the lambda function was developed to return data via an API gateway, so the output is formatted for that purpose, not necessarily to be consumed directly.
+            **NOTICE**: the lambda function was developed to return data via an API gateway, so the output is formatted for that purpose, not necessarily to be consumed directly.
 
 The function call requires one parameter named `metric` which can be one of several strings:
 - `unblendedcost`
@@ -73,7 +74,36 @@ The function call requires one parameter named `metric` which can be one of seve
 - `pricing/publicOnDemandCost`
 - `AmortizedCost`
 - `BlendedCost`
+
+
 I cannot explain the intricacies of AWS billing that tell these options apart. But I know that I use `UnblendedRateCalc` which provides daily and cumulative monthly cost.
+
+The Lambda function requires privileges to read from the S3 bucket `billing-homeassistant-temp`, which I assigned via a role similar to the below:
+
+```
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "cur:DescribeReportDefinitions",
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObjectAcl",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:DeleteObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": [
+                "arn:aws:s3:::billing-homeassistant-temp",
+                "arn:aws:s3:::billing-homeassistant-temp/*"
+```
 
 ### AWS API Gateway
 
