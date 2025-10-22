@@ -15,11 +15,13 @@ In broad strokes, the process consists of:
 
 ## The details
 
+If you want to implement this mechanism, please follow the details in the order listed. Data export, Lambda function API gateway and homeassistant setup.
+
 ### AWS Billing and Cost Management -> Data Export
 
 This is what AWS provides as the means to round up billing data across the entire account.
 
-The Data Export - named `billing-homeassistant-export` in my case - is set to Legacy CUR Export. It should be setup with the following settings:
+The Data Export - named `billing-homeassistant-export` in my case - is set to Legacy CUR Export. The information generated in this Data Export is a long list of items handled by AWS and the impact that their use had on the billing calculation. It should be setup with the following settings:
 
 Data Export Delivery Options
 * Report Data Time Granularity: `daily`
