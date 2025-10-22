@@ -148,6 +148,24 @@ AWS Objects created so far:
 ---
 ### AWS API Gateway
 
+Sample curl request that calls the gateway API method externally:
+
+`curl -X POST https://<API-ID>.execute-api.<REGION>.amazonaws.com/billing -H "Content-Type: application/json" -d '{"metric": "UnblendedRateCalc"}'`
+
+```
+{
+  "total_spend": 2.45,
+  "last_day_spend": 0.116,
+  "latest_day": "2025-10-21",
+  "metric_used": "UnblendedRateCalc",
+  "latest_report": "reports/billing-homeassistant-export/20251001-20251101/20251022T171233Z/billing-homeassistant-export-00001.csv.zip",
+  "report_timestamp": "20251022T171233Z",
+  "old_reports_deleted": [],
+  "message": "Processed latest CUR report successfully"
+}
+```
+
+That looks much more usable than the lambda output!
 
 AWS Objects created so far:
 | Component | Object | Purpose |
