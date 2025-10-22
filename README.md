@@ -17,6 +17,7 @@ In broad strokes, the process consists of:
 
 If you want to implement this mechanism, please follow the details in the order listed. Data export, Lambda function API gateway and homeassistant setup.
 
+---
 ### AWS Billing and Cost Management -> Data Export
 
 This is what AWS provides as the means to round up billing data across the entire account.
@@ -70,6 +71,14 @@ I don't think the data export can be forced to run, so I waited until it ran onc
 
 <img alt="Data Export report file sample on S3 bucket" src="/img/data_export_report_file_sample.png" width=600px />
 
+AWS Objects created so far:
+
+| Component | Object | Purpose |
+| ---      | ------   | -------- |
+| AWS Billing and Cost Management<br />Data Export | `billing-homeassistant-export` | Billing Data Export (CUR Legacy) |
+| AWS S3 bucket | `billing-homeassistant-temp` | S3 Bucket to store Data Export report data |
+
+---
 ### AWS Lambda function
 
 To interpret the Data Exports, there is a Lambda function named `billing-homeassistant-cur` of type Python 3.13 that unpacks and parses the content to run the calculations.
@@ -116,8 +125,40 @@ The Lambda function requires privileges to read from the S3 bucket `billing-home
 
 <img alt="Lambda Function permissions including custom role" src="/img/lambda-permissions.png" width=600px />
 
+Successfully calling the lambda function should return this kind of content (beautiful it is not, remember this is to be served via an API gateway route):
+
+```
+{
+  "statusCode": 200,
+  "body": "{\"total_spend\": 2.45, \"last_day_spend\": 0.116, \"latest_day\": \"2025-10-21\", \"metric_used\": \"UnblendedRateCalc\", \"latest_report\": \"reports/billing-homeassistant-export/20251001-20251101/20251022T171233Z/billing-homeassistant-export-00001.csv.zip\", \"report_timestamp\": \"20251022T171233Z\", \"old_reports_deleted\": [], \"message\": \"Processed latest CUR report successfully\"}",
+  "headers": {
+    "Content-Type": "application/json"
+  }
+}
+```
+
+AWS Objects created so far:
+| Component | Object | Purpose |
+| ---      | ------   | -------- |
+| AWS Billing and Cost Management<br />Data Export | `billing-homeassistant-export` | Billing Data Export (CUR Legacy) |
+| AWS S3 bucket | `billing-homeassistant-temp` | S3 Bucket to store Data Export report data |
+| AWS Lambda | `billing-homeassistant-cur` | Lambda function used to parse Data Export report |
+| AWS IAM | `billing-homeassistant-cur-policy` | IAM Role created to provide Lambda with access to the S3 bucket |
+
+---
 ### AWS API Gateway
 
+
+AWS Objects created so far:
+| Component | Object | Purpose |
+| ---      | ------   | -------- |
+| AWS Billing and Cost Management<br />Data Export | `billing-homeassistant-export` | Billing Data Export (CUR Legacy) |
+| AWS S3 bucket | `billing-homeassistant-temp` | S3 Bucket to store Data Export report data |
+| AWS Lambda | `billing-homeassistant-cur` | Lambda function used to parse Data Export report |
+| AWS IAM | `billing-homeassistant-cur-policy` | IAM Role created to provide Lambda with access to the S3 bucket |
+| AWS API Gateway | `ha-api` | API Gateway routed method to call the lambda function externally |
+
+---
 ### Homeassistant REST template
 
 Configuration.yaml
@@ -127,4 +168,5 @@ rest: !include_merge_dir rest/
 
 [aws.yaml](/aws.yaml)
 
+---
 ### Homeassistant template sensors
