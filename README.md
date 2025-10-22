@@ -79,6 +79,11 @@ I cannot explain the intricacies of AWS billing that tell these options apart. B
 
 ### Homeassistant REST template
 
-[rest_aws.yaml](/rest_aws.yaml)
+Configuration.yaml
+```
+rest: !include_merge_dir rest/
+```
+
+[aws.yaml](/aws.yaml)
 
 ### Homeassistant template sensors
