@@ -148,9 +148,11 @@ AWS Objects created so far:
 ---
 ### AWS API Gateway
 
+In order to facilitate calling the lambda function externally and to provide additional flexibility, I used an API gateway. This was an HTTP API with an integration set to the lambda function setup in the previous step `billing-homeassistant-cur`. I have also created a route to map the POST request towards the `/billing` path to the lambda integration. Upon creation, the API is assigned an identifier, which in this guide will be referred to as `API-ID`.
+
 Sample curl request that calls the gateway API method externally:
 
-`curl -X POST https://<API-ID>.execute-api.<REGION>.amazonaws.com/billing -H "Content-Type: application/json" -d '{"metric": "UnblendedRateCalc"}'`
+`curl -X POST https://API-ID.execute-api.REGION.amazonaws.com/billing -H "Content-Type: application/json" -d '{"metric": "UnblendedRateCalc"}'`
 
 ```
 {
@@ -167,6 +169,16 @@ Sample curl request that calls the gateway API method externally:
 
 That looks much more usable than the lambda output!
 
+#### Authentication and threat assessment
+
+You will notice that the API request is effectively anonymous. As long as you know the API identifier, you will be able to retrieve the data without having to authenticate.
+
+There are a few layers of security underneath - the API is limited to calling the Lambda function; the Lambda function is limited to reading the reporting S3 bucket; the S3 bucket is private. On the other hand, the Lambda function takes parameters, which opens up a world of exploitation opportunities.
+
+Authentication and authorisation can be implemented in the API Gateway (and I recommend you do so) as an additional layer to that defense-in-depth.
+
+
+
 AWS Objects created so far:
 | Component | Object | Purpose |
 | ---      | ------   | -------- |
@@ -174,7 +186,8 @@ AWS Objects created so far:
 | AWS S3 bucket | `billing-homeassistant-temp` | S3 Bucket to store Data Export report data |
 | AWS Lambda | `billing-homeassistant-cur` | Lambda function used to parse Data Export report |
 | AWS IAM | `billing-homeassistant-cur-policy` | IAM Role created to provide Lambda with access to the S3 bucket |
-| AWS API Gateway | `ha-api` | API Gateway routed method to call the lambda function externally |
+| AWS API Gateway | `billing-homeassistant-api` | HTTP API created to call the lambda function externally |
+| AWS API Identifier | `API-ID` | API identifier used in the external URL |
 
 ---
 ### Homeassistant REST template
