@@ -149,15 +149,17 @@ AWS Objects created so far:
 ---
 ### AWS API Gateway
 
-In order to facilitate calling the lambda function externally and to provide additional flexibility, I used an API gateway. This was an HTTP API with an integration set to the lambda function setup in the previous step `billing-homeassistant-cur`. I have also created a route to map the POST request towards the `/billing` path to the lambda integration. Upon creation, the API is assigned an identifier, which in this guide will be referred to as `API-ID`.
+In order to facilitate calling the lambda function externally and to provide additional flexibility, I used an API gateway.
+
+This was an HTTP API with an integration set to the lambda function setup in the previous step `billing-homeassistant-cur`.
 
 <img alt="API Configuration" src="/img/api_configure.png" width=600px />
 
+I have also created a route to map the POST request towards the `/billing` path to the lambda integration.
+
 <img alt="API Creating route" src="/img/api_configure_route.png" width=600px />
 
-<img alt="API Routes" src="/img/api_routes.png" width=600px />
-
-<img alt="API Integration" src="/img/api_integration.png" width=600px />
+Upon creation, the API is assigned an identifier, which in this guide will be referred to as `API-ID`, which in turn will form part of the URL used to access it. It will be of the shape of <tt>https://**API-ID**.execute-api.**REGION**.amazonaws.com/_billing_</tt>.
 
 <img alt="API information page including URL for accessing" src="/img/api_settings_url.png" width=600px />
 
@@ -178,7 +180,7 @@ Sample curl request that calls the gateway API method externally:
 }
 ```
 
-That looks much more usable than the lambda output!
+That looks much more usable than the lambda's direct output!
 
 AWS Objects created so far:
 | Component | Object | Purpose |
@@ -203,11 +205,11 @@ Authentication and authorisation can be implemented in the API Gateway (and I re
 
 ---
 
-The method I developed to implement simple key authentication to the API consisted of setting up a Lambda function and assigning it to an Authorizer within the HTTP API. You can go a step further and have IAM based authentication or Cognito.
+The method I developed to implement simple key authentication to the API consisted of setting up a Lambda function and assigning it to an Authorizer within the HTTP API. This is perhaps the simplest easiest to implement (also weakest) method whereby an arbitrary string is used as an API key required in an HTTP header. The API key is stored in an environment variable on the lambda function that performs the authentication. You can choose whatever to use as an API key - I chose a random string.
 
-A Lambda function which I named `billing-homeassistant-apikey` was created and the environment was set with the API key in a variable as per the code. The code can be found here: [authorizer-apikey.py](/authorizer-apikey.py). This Lambda function does not need additional permissions. For testing, I temporarily created an external URL and tested with cURL as below:
+A Lambda function which I named `billing-homeassistant-apikey` was created and the environment was set with the API key `API-KEY` in a variable as per the code. The code can be found here: [authorizer-apikey.py](/authorizer-apikey.py). This Lambda function does not need additional permissions. For testing, I temporarily created an external URL and tested with cURL as below:
 
-`curl -H 'x-api-key: <KEY>' https://<URL>/`
+`curl -H 'x-api-key: <API-KEY>' https://<URL>/`
 `curl -H 'x-api-key: bogus' https://<URL>/`
 
 If these 2 requests return success and failure, respectively, the lambda function is working correctly. The public URL can be disabled now since it will never be used.
@@ -218,8 +220,22 @@ The HTTP API created above (`billing-homeassistant-api`) was then modified to ad
 
 
 
+If everything is working properly, the lambda authentication function is working and the API route's integration with the Authorizer is setup correctly, the previous sample request will now need the valid API key to respond successfully:
 
+`curl -X POST https://API-ID.execute-api.REGION.amazonaws.com/billing -H "Content-Type: application/json" -H "x-api-key: API-KEY" -d '{"metric": "UnblendedRateCalc"}'`
 
+```
+{
+  "total_spend": 2.45,
+  "last_day_spend": 0.116,
+  "latest_day": "2025-10-21",
+  "metric_used": "UnblendedRateCalc",
+  "latest_report": "reports/billing-homeassistant-export/20251001-20251101/20251022T171233Z/billing-homeassistant-export-00001.csv.zip",
+  "report_timestamp": "20251022T171233Z",
+  "old_reports_deleted": [],
+  "message": "Processed latest CUR report successfully"
+}
+```
 
 
 
@@ -237,6 +253,7 @@ AWS Objects created so far:
 | AWS API Gateway | `billing-homeassistant-api` | HTTP API created to call the lambda function externally |
 | AWS API Identifier | `API-ID` | API identifier used in the external URL |
 | AWS Lambda | `billing-homeassistant-apikey` | Lambda function used to implement key authentication to the billing API |
+| AWS API key | `API-KEY` | Statically assigned string used as authentication for API |
 
 ---
 ### Homeassistant REST template
