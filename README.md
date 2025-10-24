@@ -209,8 +209,11 @@ The method I developed to implement simple key authentication to the API consist
 
 A Lambda function which I named `billing-homeassistant-apikey` was created and the environment was set with the API key `API-KEY` in a variable as per the code. The code can be found here: [authorizer-apikey.py](/authorizer-apikey.py). This Lambda function does not need additional permissions. For testing, I temporarily created an external URL and tested with cURL as below:
 
-<environment>
-<function URL>
+
+<img alt="Lambda Environment Variable" src="/img/lambda_env_apikey.png" width=600px />
+
+<img alt="Function URLs removed" src="/img/lambda_function_url.png" width=600px />
+
 
 Correct API key (`API-KEY` replaced in this example for sample shown above of `1c3241c3b0f0843af4be4e4c58f5d396c66d99f8`):
 ```
