@@ -209,16 +209,39 @@ The method I developed to implement simple key authentication to the API consist
 
 A Lambda function which I named `billing-homeassistant-apikey` was created and the environment was set with the API key `API-KEY` in a variable as per the code. The code can be found here: [authorizer-apikey.py](/authorizer-apikey.py). This Lambda function does not need additional permissions. For testing, I temporarily created an external URL and tested with cURL as below:
 
-`curl -H 'x-api-key: <API-KEY>' https://<URL>/`
-`curl -H 'x-api-key: bogus' https://<URL>/`
+<environment>
+<function URL>
+
+Correct API key (`API-KEY` replaced in this example for sample shown above of `1c3241c3b0f0843af4be4e4c58f5d396c66d99f8`):
+```
+$ curl -s -H 'x-api-key: 1c3241c3b0f0843af4be4e4c58f5d396c66d99f8' https://ugxejmwzkptsibrr2qm5mu
+heha0fmenj.lambda-url.eu-west-2.on.aws/ | jq
+{
+  "isAuthorized": true,
+  "context": {
+    "principalId": "AuthorizedUser"
+  }
+}
+```
+
+Invalid API key:
+```
+$ curl -s -H 'x-api-key: XXXX' https://ugxejmwzkptsibrr2qm5muheha0fmenj.lambda-url.eu-west-2.on.aws/ | jq
+{
+  "isAuthorized": false,
+  "context": {
+    "principalId": "Unauthorized"
+  }
+}
+```
 
 If these 2 requests return success and failure, respectively, the lambda function is working correctly. The public URL can be disabled now since it will never be used.
 
+<function url>
 
+The HTTP API created above (`billing-homeassistant-api`) was then modified to add an Authorizer object under the POST route for the lambda integration - in my example `/billing`. The Authorizer must be assigned the authorizer lambda function `billing-homeassistant-apikey`, set to type `Lambda`, have a Response mode `Simple`, an Identity Source of `$request.header.x-api-key`.
 
-The HTTP API created above (`billing-homeassistant-api`) was then modified to add an Authorizer object under the POST method for the lambda integration - in my example `/billing`.
-
-
+<Route with Authorizer>
 
 If everything is working properly, the lambda authentication function is working and the API route's integration with the Authorizer is setup correctly, the previous sample request will now need the valid API key to respond successfully:
 
@@ -236,12 +259,6 @@ If everything is working properly, the lambda authentication function is working
   "message": "Processed latest CUR report successfully"
 }
 ```
-
-
-
-
-
-
 
 AWS Objects created so far:
 | Component | Object | Purpose |
