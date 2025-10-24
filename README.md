@@ -151,6 +151,16 @@ AWS Objects created so far:
 
 In order to facilitate calling the lambda function externally and to provide additional flexibility, I used an API gateway. This was an HTTP API with an integration set to the lambda function setup in the previous step `billing-homeassistant-cur`. I have also created a route to map the POST request towards the `/billing` path to the lambda integration. Upon creation, the API is assigned an identifier, which in this guide will be referred to as `API-ID`.
 
+<img alt="API Configuration" src="/img/api_configure.png" width=600px />
+
+<img alt="API Creating route" src="/img/api_configure_route.png" width=600px />
+
+<img alt="API Routes" src="/img/api_routes.png" width=600px />
+
+<img alt="API Integration" src="/img/api_integration.png" width=600px />
+
+<img alt="API information page including URL for accessing" src="/img/api_settings_url.png" width=600px />
+
 Sample curl request that calls the gateway API method externally:
 
 `curl -X POST https://API-ID.execute-api.REGION.amazonaws.com/billing -H "Content-Type: application/json" -d '{"metric": "UnblendedRateCalc"}'`
